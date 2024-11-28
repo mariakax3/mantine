@@ -41,65 +41,27 @@ export interface DonutChartProps
   extends BoxProps,
     StylesApiProps<DonutChartFactory>,
     ElementProps<'div'> {
-  /** Data used to render chart */
   data: DonutChartCell[];
-
-  /** Determines whether the tooltip should be displayed when one of the section is hovered, `true` by default */
   withTooltip?: boolean;
-
-  /** Tooltip animation duration in ms, `0` by default */
   tooltipAnimationDuration?: number;
-
-  /** Props passed down to `Tooltip` recharts component */
   tooltipProps?: Omit<TooltipProps<any, any>, 'ref'>;
-
-  /** Props passed down to recharts `Pie` component */
   pieProps?: Partial<Omit<PieProps, 'ref'>>;
-
-  /** Controls color of the segments stroke, by default depends on color scheme */
   strokeColor?: MantineColor;
-
-  /** Controls text color of all labels, by default depends on color scheme */
   labelColor?: MantineColor;
-
-  /** Controls padding between segments, `0` by default */
   paddingAngle?: number;
-
-  /** Determines whether each segment should have associated label, `false` by default */
   withLabels?: boolean;
-
-  /** Determines whether segments labels should have lines that connect the segment with the label, `true` by default */
   withLabelsLine?: boolean;
-
-  /** Controls thickness of the chart segments, `20` by default */
   thickness?: number;
-
-  /** Controls chart width and height, height is increased by 40 if `withLabels` prop is set. Cannot be less than `thickness`. `80` by default */
   size?: number;
-
-  /** Controls width of segments stroke, `1` by default */
   strokeWidth?: number;
-
-  /** Controls angle at which chart starts, `0` by default. Set to `180` to render the chart as semicircle. */
   startAngle?: number;
-
-  /** Controls angle at which charts ends, `360` by default. Set to `0` to render the chart as semicircle. */
   endAngle?: number;
-
-  /** Determines which data is displayed in the tooltip. `'all'` – display all values, `'segment'` – display only hovered segment. `'all'` by default. */
   tooltipDataSource?: 'segment' | 'all';
-
-  /** Chart label, displayed in the center of the chart */
   chartLabel?: string | number;
-
-  /** Additional elements rendered inside `PieChart` component */
   children?: React.ReactNode;
-
-  /** Props passed down to recharts `PieChart` component */
   pieChartProps?: React.ComponentPropsWithoutRef<typeof ReChartsPieChart>;
-
-  /** A function to format values inside the tooltip */
   valueFormatter?: (value: number) => string;
+  legendOrientation?: 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center-left' | 'center-right';
 }
 
 export type DonutChartFactory = Factory<{
@@ -159,6 +121,7 @@ export const DonutChart = factory<DonutChartFactory>((_props, ref) => {
     pieChartProps,
     valueFormatter,
     strokeColor,
+    legendOrientation,
     ...others
   } = props;
 
@@ -192,6 +155,19 @@ export const DonutChart = factory<DonutChartFactory>((_props, ref) => {
     />
   ));
 
+  const legendPosition = {
+    'top': { x: 0, y: -180 },
+    'bottom': { x: 0, y: 180 },
+    'top-left': { x: -180, y: -180 },
+    'top-right': { x: 180, y: -180 },
+    'bottom-left': { x: -180, y: 180 },
+    'bottom-right': { x: 180, y: 180 },
+    'center-left': { x: -230, y: 0 },
+    'center-right': { x: 230, y: 0 },
+  };
+
+  const legendOffset = legendPosition[legendOrientation || 'center-right'];
+
   return (
     <Box ref={ref} size={size} {...getStyles('root')} {...others}>
       <ResponsiveContainer>
@@ -205,23 +181,8 @@ export const DonutChart = factory<DonutChartFactory>((_props, ref) => {
             paddingAngle={paddingAngle}
             startAngle={startAngle}
             endAngle={endAngle}
-            label={
-              withLabels
-                ? {
-                    fill: 'var(--chart-labels-color, var(--mantine-color-dimmed))',
-                    fontSize: 12,
-                    fontFamily: 'var(--mantine-font-family)',
-                  }
-                : false
-            }
-            labelLine={
-              withLabelsLine
-                ? {
-                    stroke: 'var(--chart-label-color, var(--mantine-color-dimmed))',
-                    strokeWidth: 1,
-                  }
-                : false
-            }
+            label={withLabels ? { fill: 'var(--chart-labels-color, var(--mantine-color-dimmed))', fontSize: 12, fontFamily: 'var(--mantine-font-family)' } : false}
+            labelLine={withLabelsLine ? { stroke: 'var(--chart-label-color, var(--mantine-color-dimmed))', strokeWidth: 1 } : false}
             {...pieProps}
           >
             {cells}
@@ -253,6 +214,7 @@ export const DonutChart = factory<DonutChartFactory>((_props, ref) => {
                   valueFormatter={valueFormatter}
                 />
               )}
+              position={{ x: legendOffset.x, y: legendOffset.y }}
               {...tooltipProps}
             />
           )}
